@@ -126,6 +126,5 @@ static void exit_myproc_module(void)
 module_init(init_myproc_module);
 module_exit(exit_myproc_module);
 
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Student");
+
 MODULE_DESCRIPTION("Proc mmap example for CS3502");
