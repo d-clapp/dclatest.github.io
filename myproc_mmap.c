@@ -127,4 +127,5 @@ module_init(init_myproc_module);
 module_exit(exit_myproc_module);
 
 MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Daniel");
 
