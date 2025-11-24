@@ -19,7 +19,7 @@ static void allocate_memory(void);
 static void clear_memory(void);
 static int my_map(struct file *filp, struct vm_area_struct *vma);
 
-/* use struct proc_ops on newer kernels */
+/* use struct proc_ops for /proc/mydir/myinfo */
 static const struct proc_ops myproc_fops = {
 	.proc_mmap = my_map,
 };
@@ -27,6 +27,7 @@ static const struct proc_ops myproc_fops = {
 static int my_map(struct file *filp, struct vm_area_struct *vma)
 {
 	unsigned long size;
+	struct page *page;
 	unsigned long pfn;
 
 	size = vma->vm_end - vma->vm_start;
@@ -37,8 +38,14 @@ static int my_map(struct file *filp, struct vm_area_struct *vma)
 		return -EINVAL;
 	}
 
-	/* get physical frame number for buffer */
-	pfn = virt_to_phys(buffer) >> PAGE_SHIFT;
+	if (!buffer) {
+		pr_info("myproc: buffer is NULL\n");
+		return -EINVAL;
+	}
+
+	/* get the page and PFN for our buffer */
+	page = virt_to_page(buffer);
+	pfn  = page_to_pfn(page);
 
 	/* map the kernel page into user space */
 	if (remap_pfn_range(vma,
@@ -88,8 +95,8 @@ static void allocate_memory(void)
 	/* copy the array into the beginning of the page */
 	memcpy(buffer, array, sizeof(array));
 
-	/* mark the page as reserved */
-	SetPageReserved(virt_to_page(buffer));
+	/* on newer kernels SetPageReserved is deprecated, so we skip it */
+	/* SetPageReserved(virt_to_page(buffer)); */
 }
 
 static void clear_memory(void)
@@ -97,10 +104,8 @@ static void clear_memory(void)
 	if (!buffer)
 		return;
 
-	/* clear reserved bit */
-	ClearPageReserved(virt_to_page(buffer));
+	/* ClearPageReserved(virt_to_page(buffer)); */
 
-	/* free memory */
 	kfree(buffer);
 	buffer = NULL;
 }
@@ -122,3 +127,5 @@ module_init(init_myproc_module);
 module_exit(exit_myproc_module);
 
 MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Student");
+MODULE_DESCRIPTION("Proc mmap example for CS3502");
